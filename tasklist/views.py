@@ -4,6 +4,7 @@ from rest_framework import permissions, status
 from .models import Tasklist
 from rest_framework.response import Response
 from .serializers import TaskSerializer
+from django.db import models
 
 # Create your views here.
 
@@ -53,5 +54,25 @@ class TaskDetailView(APIView):
         except Tasklist.DoesNotExist:
             return Response({'error': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
         
-        task.delete
+        task.delete()
         return Response({'message': 'Task deleted.'}, status=status.HTTP_204_NO_CONTENT)
+    
+class CompletedTaskListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        completed_tasks = Tasklist.objects.filter(user=request.user, status='completed')
+        serializer = TaskSerializer(completed_tasks, many=True)
+        return Response(serializer.data)
+    
+
+class TaskSearchView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        query = request.GET.get('q', '')
+        results = Tasklist.objects.filter(user=request.user).filter(
+            models.Q(title__icontains=query) | models.Q(description__icontains=query)
+        )
+        serializer = TaskSerializer(results, many=True)
+        return Response(serializer.data)
