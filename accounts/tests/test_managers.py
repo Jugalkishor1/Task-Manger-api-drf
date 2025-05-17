@@ -17,3 +17,4 @@ class UserManagerTest(TestCase):
         admin = User.objects.create_superuser(email='admin@example.com', password='admin123')
         self.assertTrue(admin.is_superuser)
         self.assertTrue(admin.is_staff)
+

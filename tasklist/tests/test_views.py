@@ -48,3 +48,94 @@ class TaskListViewTest(APITestCase):
         response = self.client.post(self.url, data, format='json', **self.auth_header)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('title', response.data)
+
+
+class TaskDetailView(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='testpass123')
+        self.token = RefreshToken.for_user(self.user).access_token
+        self.auth_header = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+    def test_get_task_details(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1')
+        url = reverse('task-detail', kwargs={'pk': task1.id})
+        
+        response = self.client.get(url, **self.auth_header)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], task1.title)
+    
+    
+    def test_try_to_get_non_existing_task(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1')
+        url = reverse('task-detail', kwargs={'pk': task1.id + 1})
+        
+        response = self.client.get(url, **self.auth_header)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error'], "Task not found")
+
+    
+    def test_update_task(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Test task')
+        url = reverse("task-detail", kwargs={'pk': task1.id})
+
+        response = self.client.put(url, **self.auth_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], "Test task")
+
+
+    def test_try_to_update_non_existing_task(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1')
+        url = reverse('task-detail', kwargs={'pk': task1.id + 1})
+        
+        response = self.client.put(url, **self.auth_header)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error'], "Task not found.")
+    
+    def test_update_with_invlaid_params(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1')
+        url = reverse('task-detail', kwargs={'pk': task1.id})
+        data = {
+            "title": ""
+        }
+        response = self.client.put(url, data,**self.auth_header)
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('title', response.data)
+
+    def test_delete_task(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1')
+        url = reverse('task-detail', kwargs={'pk': task1.id})
+        
+        response = self.client.delete(url, **self.auth_header)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data['message'], "Task deleted.")
+
+    
+    def test_delete_non_existing_task(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1')
+        url = reverse('task-detail', kwargs={'pk': task1.id + 1})
+        
+        response = self.client.delete(url, **self.auth_header)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error'], "Task not found.")
+
+
+class CompletedTaskListView(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='testpass123')
+        self.token = RefreshToken.for_user(self.user).access_token
+        self.auth_header = {'HTTP_AUTHORIZATION': f'Bearer {self.token}'}
+
+    def test_get_all_completed_tasks(self):
+        task1 = Tasklist.objects.create(user=self.user, title='Task 1', status="completed")
+
+        url = reverse('completed')
+        
+        response = self.client.get(url, **self.auth_header)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['title'], task1.title)
