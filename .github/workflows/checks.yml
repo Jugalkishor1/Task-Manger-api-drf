@@ -48,7 +48,7 @@ jobs:
       run: docker compose run --rm app sh -c "python manage.py test"
 
     - name: Run Linter (flake8)
-      run: docker-compose exec -T app flake8 .
+      run: docker compose run --rm app sh -c "flake8"
 
     - name: Tear Down
       if: always()
