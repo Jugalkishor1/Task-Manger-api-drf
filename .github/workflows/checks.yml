@@ -1,0 +1,51 @@
+name: Task Manager App CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: taskuser
+          POSTGRES_PASSWORD: taskpass
+          POSTGRES_DB: taskdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Docker Compose
+      run: |
+        docker compose up --build -d
+
+    - name: Wait for DB and App to be ready
+      run: sleep 20
+
+    - name: Run migration
+      run: docker compose run --rm app sh -c "python manage.py migrate"
+
+    - name: Test
+      run: docker compose run --rm app sh -c "python manage.py test"
+    - name: Tear Down
+      if: always()
+      run: docker compose down
