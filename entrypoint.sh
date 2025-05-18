@@ -1,21 +1,25 @@
 #!/bin/sh
 
-echo "📡 Waiting for PostgreSQL to be ready..."
+set -e
 
-while ! nc -z $DB_HOST $DB_PORT; do
-  sleep 0.5
+echo "📡 Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
+
+# Wait for PostgreSQL to be ready
+until nc -z $DB_HOST $DB_PORT; do
+  echo "⏳ Waiting for database..."
+  sleep 1
 done
 
-echo "PostgreSQL is up!"
+echo "✅ PostgreSQL is up!"
 
-echo "Running migrations..."
-python manage.py migrate
+echo "🔧 Running migrations..."
+python manage.py migrate --noinput
 
-echo "Create Super User....."
-python manage.py createadmin
+echo "👤 Creating admin user..."
+python manage.py createadmin || true
 
-echo "Collecting static files..."
+echo "🎯 Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Starting Django server..."
-python manage.py runserver 0.0.0.0:8000
+echo "🚀 Starting Django server..."
+exec python manage.py runserver 0.0.0.0:8000
