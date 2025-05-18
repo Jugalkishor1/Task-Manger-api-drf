@@ -170,3 +170,6 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'task-manger-api-1cq2.onrender.com'),
 ]
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
