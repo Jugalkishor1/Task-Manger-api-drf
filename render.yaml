@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: task-manager-api
+    env: docker
+    repo: https://github.com/Jugalkishor1/Task-Manger-api-drf
+    region: oregon
+    plan: free
+    branch: main
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: DB_NAME
+        value: taskdb
+      - key: DB_USER
+        value: taskuser
+      - key: DB_PASSWORD
+        value: taskpass
+      - key: DB_HOST
+        fromDatabase:
+          name: task-manager-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: task-manager-db
+          property: port
