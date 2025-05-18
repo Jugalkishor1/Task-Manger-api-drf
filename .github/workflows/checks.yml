@@ -2,9 +2,9 @@ name: Task Manager App CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-test:
@@ -20,36 +20,45 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready"
+          --health-cmd="pg_isready -U taskuser"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
+    env:
+      DB_NAME: taskdb
+      DB_USER: taskuser
+      DB_PASSWORD: taskpass
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DEBUG: 1
+
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-    - name: Set up Docker Compose
-      run: |
-        docker compose up --build -d
+      - name: 🐳 Build and start containers
+        run: docker compose up --build -d
 
-    - name: Wait for DB and App to be ready
-      run: sleep 20
+      - name: 🕓 Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..10}; do
+            docker exec $(docker ps -qf "name=app") python manage.py migrate && break
+            echo "Waiting for DB to be ready... ($i)"
+            sleep 5
+          done
 
-    - name: Run migration
-      run: docker compose run --rm app sh -c "python manage.py migrate"
+      - name: 🧪 Run tests
+        run: docker compose exec app python manage.py test
 
-    - name: Test
-      run: docker compose run --rm app sh -c "python manage.py test"
+      - name: 🧹 Run linter (flake8)
+        run: docker compose exec app flake8
 
-    - name: Run Linter (flake8)
-      run: docker compose run --rm app sh -c "flake8"
-
-    - name: Tear Down
-      if: always()
-      run: docker compose down
+      - name: 🧹 Clean up
+        if: always()
+        run: docker compose down --volumes --remove-orphans
