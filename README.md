@@ -14,6 +14,7 @@ Users can register, log in, and manage their personal task lists securely with f
 - ✅ PostgreSQL database (Dockerized)
 - ✅ Token-based authentication
 - ✅ Built and deployed with Docker Compose
+- ✅ Swagger-based interactive API docs
 
 ---
 
@@ -25,6 +26,18 @@ Users can register, log in, and manage their personal task lists securely with f
 - PostgreSQL
 - Docker & Docker Compose
 - JWT (JSON Web Tokens)
+
+---
+
+---
+
+## 📚 API Documentation (Swagger)
+
+Interactive API docs are available via Swagger UI:
+
+📍 [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
+
+You can view all endpoints, try them out with live input, and inspect request/response formats.
 
 ---
 
@@ -65,6 +78,7 @@ docker-compose up
 
 The API will be available at:  
 📍 **http://localhost:8000**
+📚 Swagger Docs: **http://localhost:8000/api/docs/**
 
 ---
 
@@ -119,4 +133,3 @@ python manage.py runserver
 Made with ❤️ by Jugal Kishor  
 📧 Email: jugalpatel1054@gmail.com  
 🔗 GitHub: [jugalkishor1](https://github.com/jugalkishor1)
-
