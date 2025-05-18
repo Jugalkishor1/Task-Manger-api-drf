@@ -4,11 +4,17 @@ from .models import Tasklist
 from rest_framework.response import Response
 from .serializers import TaskSerializer
 from django.db import models
+from drf_spectacular.utils import extend_schema
 
 
 class TaskListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TaskSerializer
 
+    @extend_schema(
+        operation_id="list_user_tasks",
+        description="List all tasks for the authenticated user."
+    )
     def get(self, request):
         tasks = Tasklist.objects.filter(user=request.user)
         serializer = TaskSerializer(tasks, many=True)
@@ -25,7 +31,12 @@ class TaskListView(APIView):
 
 class TaskDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TaskSerializer
 
+    @extend_schema(
+        operation_id="get_task_detail",
+        description="Retrieve a single task by ID for the authenticated user."
+    )
     def get(self, request, pk):
         try:
             task = Tasklist.objects.get(id=pk, user=request.user)
@@ -59,6 +70,7 @@ class TaskDetailView(APIView):
 
 class CompletedTaskListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TaskSerializer
 
     def get(self, request):
         completed_tasks = Tasklist.objects.filter(user=request.user, status='completed')
@@ -68,6 +80,7 @@ class CompletedTaskListView(APIView):
 
 class TaskSearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TaskSerializer
 
     def get(self, request):
         query = request.GET.get('q', '')
